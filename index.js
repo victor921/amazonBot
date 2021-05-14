@@ -4,6 +4,7 @@ require('dotenv/config')
 var colors = require('colors')
 var fs = require('fs')
 const parse = require('./parseHTML')
+const parseCaptcha = require('./parseCaptcha')
 
 
 
@@ -23,16 +24,20 @@ function timeStamp() {
 
 (async () => {
 
-  let asin = prompt('Enter the product ASIN: ');
-  let maxPrice = prompt('Enter max price: ')
 
-  let url = 'https://www.amazon.com/gp/product/' + asin
+  // let asin = prompt('Enter the product ASIN: ');
+  // let maxPrice = prompt('Enter max price: ')
+
+  let maxPrice = 500
+
+  let url = 'https://www.amazon.com/gp/product/' + 'B08166SLDF' + '/ref=olp_aod_redir_impl1?_encoding=UTF8&aod=1'
+
 
   try {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
     await page.setViewport({ width: 1080, height: 920 });
-    await page.goto(url);
+    await page.goto(url), { waitUntil: 'networkidle0' };
 
     url = ''
     
@@ -47,18 +52,21 @@ function timeStamp() {
 
     while (url === '') {
 
-      let box = await page.evaluate(() => ({
-        buyBox: document.querySelector('#a-page form#addToCart').innerHTML
-      }));
+      // let box = await page.evaluate(() => ({
+      //   buyBox: document.querySelector('#a-page div#aod-container.a-section.a-spacing-none.a-padding-none').innerHTML
+      // }));
 
-      fs.writeFileSync('source.html', box.buyBox);
+      const data = await page.evaluate(() => document.querySelector('#aod-container').innerHTML);
 
+      fs.writeFileSync('source.html', data);
+
+      
       url = await parse.final()
-
+      
       if (url === '') {
-        console.log(`[${timeStamp()}] ` + 'Product out of stock, monitoring...'.cyan)
+        console.log(`[${timeStamp()}] ` + 'Monitoring product...'.cyan)
         await sleep(1000)
-        await page.reload()
+        await page.reload({ waitUntil: 'networkidle0' })
       }
 
       else {
@@ -66,11 +74,26 @@ function timeStamp() {
       }
 
     }
-
     
     await page.goto(url)
-    
-    
+
+    const captcha = await page.evaluate(() => document.querySelector('*').innerHTML);
+
+    fs.writeFileSync('captch.html', captcha);
+
+    captchaLink = await parseCaptcha.processLineByLine()
+
+    if (captchaLink !== '')
+    {
+      console.log('CAPTCHA FOUND: '.blue, captchaLink)
+      let input = prompt('Enter the captcha in the link above: ');
+
+      await page.type('#captchacharacters', input)
+
+      await page.keyboard.press('Enter')
+
+      await page.waitForNavigation({ waitUntil: 'networkidle0'})
+    }
     
     let producPrice = await page.evaluate(() => ({
       price: document.querySelector('#a-page #sc-subtotal-amount-buybox').innerText,
@@ -89,7 +112,7 @@ function timeStamp() {
     
     
     if (newPrice > maxPrice) {
-      console.log(`${timeStamp()}] ` + `Product price found is greater than the max price set by user ($${maxPrice}), Aborting...`.red)
+      console.log(`[${timeStamp()}] ` + `Product price found is greater than the max price set by user ($${maxPrice}), Aborting...`.red)
       browser.close()
       return
 
