@@ -5,6 +5,8 @@ var colors = require('colors')
 var fs = require('fs')
 const parse = require('./parseHTML')
 const parseCaptcha = require('./parseCaptcha')
+const excelToJson = require('convert-excel-to-json');
+
 
 
 
@@ -22,25 +24,70 @@ function timeStamp() {
   return new Date().getHours() + ':' + new Date().getMinutes() + ':' + new Date().getSeconds() + ':' + new Date().getMilliseconds()
 }
 
+
+async function checkCaptcha(page) {
+      const captcha = await page.evaluate(() => document.querySelector('*').innerHTML);
+
+      
+      fs.writeFileSync('captch.html', captcha);
+
+      captchaLink = await parseCaptcha.processLineByLine()
+
+      if (captchaLink !== '' && !captchaLink.includes('>'))
+      {
+        console.log('CAPTCHA FOUND: '.blue, captchaLink)
+        let input = prompt('Enter the captcha in the link above: ');
+
+        await page.type('#captchacharacters', input)
+
+        await page.keyboard.press('Enter')
+
+        await page.waitForNavigation({ waitUntil: 'networkidle0'})
+      }
+}
+
+
 (async () => {
 
 
-  // let asin = prompt('Enter the product ASIN: ');
-  // let maxPrice = prompt('Enter max price: ')
+  const products = excelToJson({
+    source: fs.readFileSync('asins.xlsx'),
+    header: {
+      rows: 1
+    }
+  })
 
-  let maxPrice = 500
+  selection = 0
 
-  let url = 'https://www.amazon.com/gp/product/' + 'B08166SLDF' + '/ref=olp_aod_redir_impl1?_encoding=UTF8&aod=1'
+  while (selection < 1 || selection > products.Sheet1.length) 
+  {
+
+    for (i = 0; i < products.Sheet1.length; i++)
+    {
+      console.log((i + 1) + '. ' + products.Sheet1[i].A + ' | MSRP: $' + products.Sheet1[i].C)
+    }
+
+    selection = prompt('\nPlease make a selection > ')
+  }
+
+  asin = products.Sheet1[selection - 1].B
+  maxPrice = products.Sheet1[selection - 1].C
+
+  console.log('Selected: ' + products.Sheet1[selection - 1].A + ' | MSRP: $' + maxPrice)
+
+
+  let url = 'https://www.amazon.com/gp/product/' + asin + '/ref=olp_aod_redir_impl1?_encoding=UTF8&aod=1'
 
 
   try {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
     await page.setViewport({ width: 1080, height: 920 });
     await page.goto(url), { waitUntil: 'networkidle0' };
 
     url = ''
     
+    await checkCaptcha(page)
     
     console.log(`[${timeStamp()}] ` + 'Started script..'.green)
 
@@ -56,7 +103,10 @@ function timeStamp() {
       //   buyBox: document.querySelector('#a-page div#aod-container.a-section.a-spacing-none.a-padding-none').innerHTML
       // }));
 
-      const data = await page.evaluate(() => document.querySelector('#aod-container').innerHTML);
+      const data = await page.evaluate(() => document.querySelector('#aod-container').outerHTML);
+
+      // data = await page.content()
+
 
       fs.writeFileSync('source.html', data);
 
@@ -73,27 +123,51 @@ function timeStamp() {
         console.log(`[${timeStamp()}] ` + 'PRODUCT IN STOCK'.green)
       }
 
+
+      /* This code has to be tested first*/
+      // const captcha = await page.evaluate(() => document.querySelector('*').innerHTML);
+
+      
+      // fs.writeFileSync('captch.html', captcha);
+
+      // captchaLink = await parseCaptcha.processLineByLine()
+
+      // if (captchaLink !== '' && !captchaLink.includes('>'))
+      // {
+      //   console.log('CAPTCHA FOUND: '.blue, captchaLink)
+      //   let input = prompt('Enter the captcha in the link above: ');
+
+      //   await page.type('#captchacharacters', input)
+
+      //   await page.keyboard.press('Enter')
+
+      //   await page.waitForNavigation({ waitUntil: 'networkidle0'})
+      // }
+
+      await checkCaptcha(page)
     }
     
     await page.goto(url)
 
-    const captcha = await page.evaluate(() => document.querySelector('*').innerHTML);
+    await checkCaptcha(page)
 
-    fs.writeFileSync('captch.html', captcha);
+    // const captcha = await page.evaluate(() => document.querySelector('*').innerHTML);
 
-    captchaLink = await parseCaptcha.processLineByLine()
+    // fs.writeFileSync('captch.html', captcha);
 
-    if (captchaLink !== '')
-    {
-      console.log('CAPTCHA FOUND: '.blue, captchaLink)
-      let input = prompt('Enter the captcha in the link above: ');
+    // captchaLink = await parseCaptcha.processLineByLine()
 
-      await page.type('#captchacharacters', input)
+    // if (captchaLink !== '' && !captchaLink.includes('>'))
+    // {
+    //   console.log('CAPTCHA FOUND: '.blue, captchaLink)
+    //   let input = prompt('Enter the captcha in the link above: ');
 
-      await page.keyboard.press('Enter')
+    //   await page.type('#captchacharacters', input)
 
-      await page.waitForNavigation({ waitUntil: 'networkidle0'})
-    }
+    //   await page.keyboard.press('Enter')
+
+    //   await page.waitForNavigation({ waitUntil: 'networkidle0'})
+    // }
     
     let producPrice = await page.evaluate(() => ({
       price: document.querySelector('#a-page #sc-subtotal-amount-buybox').innerText,

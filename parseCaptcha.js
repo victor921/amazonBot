@@ -23,7 +23,7 @@ async function processLineByLine() {
   
     for await (const line of rl) {
 
-        if (line.includes('.jpg'))
+        if (line.includes('.jpg') && line.includes('captcha'))
         {
             return getCaptcha(line)
         }
