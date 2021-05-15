@@ -91,7 +91,7 @@ async function checkCaptcha(page) {
 
 
   try {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
     await page.setViewport({ width: 1080, height: 920 });
     await page.goto(url), { waitUntil: 'networkidle0' };
