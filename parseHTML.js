@@ -39,6 +39,10 @@ async function processLineByLine() {
       //   console.log('counter: ', counter)
       // }
 
+      // console.log(line)
+
+      
+
       if (line.includes('offeringID.1'))
       {
         product.offerListing = grabListing(line)
@@ -46,7 +50,12 @@ async function processLineByLine() {
 
       if (line.includes('Opens a new page'))
       {
-        if (line.includes('Amazon.com.'))
+
+        if (line.includes('Warehouse'))
+        {
+          continue
+        }
+        else if (line.includes('Amazon.com.'))
         {
           prevCounter = -2
         }
@@ -57,6 +66,7 @@ async function processLineByLine() {
         // console.log('Seller: ', grabSeller(line))
       }
 
+      
       if ((prevCounter + 1 == counter) && (prevCounter != -1) || prevCounter == -2)
       {
         if (prevCounter == -2)
@@ -64,7 +74,7 @@ async function processLineByLine() {
           product.seller = 'Amazon.com'
           prevCounter = -1
         }
-
+        
         else 
         {
           product.seller = grabSeller(line)
@@ -72,19 +82,19 @@ async function processLineByLine() {
         }
       }
 
+
       if (line.includes('session-id=')) 
       {
         // if (!isNaN(parseInt(sessionID.charAt(0))))
         // {
         //   continue
         // }
-
         sessionID = grabSession(line)
       }
 
+
       if (product.offerListing !== '' && product.seller !== '')
       {
-
         products.push(product)
 
         product = {
@@ -92,6 +102,7 @@ async function processLineByLine() {
           seller: ''
         }
       }
+
 
       counter = counter + 1        
     }
@@ -158,6 +169,7 @@ async function processLineByLine() {
 
       res = await processLineByLine()
 
+
       if (res.length == 0)
       {
         console.log(`[${timeStamp()}] ` + 'No seller found'.red)
@@ -191,7 +203,6 @@ async function processLineByLine() {
 
       // return atcURL
     }
-
     module.exports = {final}
     
   

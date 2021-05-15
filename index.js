@@ -36,6 +36,7 @@ async function checkCaptcha(page) {
 
       if (captchaLink !== '' && !captchaLink.includes('>'))
       {
+        hook.warn("Amazon.com", "Captcha found, check the bot..")
         capBrowser = await puppeteer.launch({ headless: false });
         const capPage = await capBrowser.newPage();
         await capPage.setViewport({ width: 1080, height: 920 });
@@ -55,6 +56,7 @@ async function checkCaptcha(page) {
       {
         capBrowser.close()
       }
+
 }
 
 
@@ -114,6 +116,8 @@ async function checkCaptcha(page) {
       return
     }
 
+    await checkCaptcha(page)
+
     let productTitle = await page.evaluate(() => ({
       name: document.querySelector('#a-page h1#title').innerText,
     }));
@@ -126,7 +130,7 @@ async function checkCaptcha(page) {
       //   buyBox: document.querySelector('#a-page div#aod-container.a-section.a-spacing-none.a-padding-none').innerHTML
       // }));
 
-      const data = await page.evaluate(() => document.querySelector('*').outerHTML);
+      const data = await page.evaluate(() => document.querySelector('*').innerHTML);
 
       // data = await page.content()
 
@@ -308,18 +312,16 @@ async function checkCaptcha(page) {
         console.log(`[${timeStamp()}] ` + 'Error during checkout.'.red)
       }
       
-      // browser.close()
-      return
-      
     } else {
       console.log(`[${timeStamp()}] ` + 'Error could not add to cart :('.red)
-      browser.close()
-      return
     }
 
+    browser.close()
+    return
+    
   } catch(err) {
     console.log(colors.red(`[${timeStamp()}]  \n` + err))
   }    
-    
+  
     
 })();
