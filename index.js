@@ -6,6 +6,8 @@ var fs = require('fs')
 const parse = require('./parseHTML')
 const parseCaptcha = require('./parseCaptcha')
 const excelToJson = require('convert-excel-to-json');
+const webhook = require('webhook-discord')
+const hook = new webhook.Webhook('https://discord.com/api/webhooks/842926855594311760/xkVubd4MoMQIrXjcYerZKtrFuH1NQb7Il0tIvlR1OfRJuS-JFXT0AJ8Lsc236KYCrLQD')
 
 
 let url = 'https://www.amazon.com/AMD-Ryzen-5800X-16-Thread-Processor/dp/B0815XFSGK/ref=sr_1_1?dchild=1&keywords=5800x&qid=1620848485&s=electronics&sr=1-1/gp/product/handle-buy-box/ref=dp_start-bbf_1_glance'
@@ -184,7 +186,7 @@ async function checkCaptcha(page) {
     }));
     
     console.log(`[${timeStamp()}] ` + colors.yellow('Price: ' + producPrice.price))
-    
+
    
     if (producPrice.count == 1) {
       console.log(`[${timeStamp()}] ` + 'Product added To cart!'.green)
@@ -279,11 +281,20 @@ async function checkCaptcha(page) {
 
       if (currPage.includes('thankyou')) {
         console.log(`[${timeStamp()}] ` + 'Checkout Succesful, check you email!'.rainbow)
-      } else {
+        
+        hook.success('Amazon.com', `Checked out!\n\n ${productTitle.name}\n ${producPrice.price}`)
+
+      } 
+      
+      if (currPage.includes('duplicate')) {
+        console.log(`[${timeStamp()}] ` + 'Duplicate Order, cancelling...'.red)
+      }
+      
+      else {
         console.log(`[${timeStamp()}] ` + 'Error during checkout.'.red)
       }
       
-      browser.close()
+      // browser.close()
       return
       
     } else {
