@@ -8,7 +8,7 @@ const parseCaptcha = require('./parseCaptcha')
 const excelToJson = require('convert-excel-to-json');
 const webhook = require('webhook-discord')
 const hook = new webhook.Webhook('https://discord.com/api/webhooks/842926855594311760/xkVubd4MoMQIrXjcYerZKtrFuH1NQb7Il0tIvlR1OfRJuS-JFXT0AJ8Lsc236KYCrLQD')
-
+const signin = require('./signin')
 
 let url = 'https://www.amazon.com/AMD-Ryzen-5800X-16-Thread-Processor/dp/B0815XFSGK/ref=sr_1_1?dchild=1&keywords=5800x&qid=1620848485&s=electronics&sr=1-1/gp/product/handle-buy-box/ref=dp_start-bbf_1_glance'
 let cartUrl = 'https://www.amazon.com/gp/cart/view.html/ref=lh_cart';
@@ -90,6 +90,7 @@ async function checkCaptcha(page) {
   let url = 'https://www.amazon.com/gp/product/' + asin + '/ref=olp_aod_redir_impl1?_encoding=UTF8&aod=1'
 
 
+
   try {
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
@@ -101,6 +102,17 @@ async function checkCaptcha(page) {
     await checkCaptcha(page)
     
     console.log(`[${timeStamp()}] ` + 'Started script..'.green)
+
+    if (await signin.signin(browser) == true)
+    {
+      await page.reload()
+    } 
+
+    else 
+    {
+      browser.close()
+      return
+    }
 
     let productTitle = await page.evaluate(() => ({
       name: document.querySelector('#a-page h1#title').innerText,
@@ -244,33 +256,35 @@ async function checkCaptcha(page) {
       */
       await page.click('#sc-buy-box-ptc-button')
 
-      console.log(`[${timeStamp()}] ` + 'Signing in...'.yellow)
+      // console.log(`[${timeStamp()}] ` + 'Signing in...'.yellow)
 
       
-      await page.waitForNavigation();
-      await page.type('#ap_email', process.env.EMAIL)  // enter email here
-      await page.click('#continue')
-      await page.waitForNavigation(); 
-      await page.type('#ap_password', process.env.PASSWORD); // enter password here
-      
-      
-      const x = await Promise.all([
-        page.click('#signInSubmit'),
-        page.waitForNavigation({ waitUntil: 'networkidle0'}),
-      ]);
-      
-      if (x[1]._url === 'https://www.amazon.com/ap/signin') {
-        console.log(`[${timeStamp()}] ` + 'Sign in unsuccesfull'.red)
-        browser.close()
-        return
-      }
-      
-      else {
-        console.log(`[${timeStamp()}] ` + 'Sucessfully signed in!'.green)
-        console.log(`[${timeStamp()}] ` + 'Attempting checkout...'.yellow)
-      }
-
       // await page.waitForNavigation();
+      // await page.type('#ap_email', process.env.EMAIL)  // enter email here
+      // await page.click('#continue')
+      // await page.waitForNavigation(); 
+      // await page.type('#ap_password', process.env.PASSWORD); // enter password here
+      
+      
+      // const x = await Promise.all([
+      //   page.click('#signInSubmit'),
+      //   page.waitForNavigation({ waitUntil: 'networkidle0'}),
+      // ]);
+      
+      // if (x[1]._url === 'https://www.amazon.com/ap/signin') {
+      //   console.log(`[${timeStamp()}] ` + 'Sign in unsuccesfull'.red)
+      //   browser.close()
+      //   return
+      // }
+      
+      // else {
+      //   console.log(`[${timeStamp()}] ` + 'Sucessfully signed in!'.green)
+      //   console.log(`[${timeStamp()}] ` + 'Attempting checkout...'.yellow)
+      // }
+
+      console.log(`[${timeStamp()}] ` + 'Attempting checkout...'.yellow)
+
+      await page.waitForNavigation();
       page.click('#submitOrderButtonId')
 
       await page.waitForNavigation();
@@ -286,7 +300,7 @@ async function checkCaptcha(page) {
 
       } 
       
-      if (currPage.includes('duplicate')) {
+      else if (currPage.includes('duplicate')) {
         console.log(`[${timeStamp()}] ` + 'Duplicate Order, cancelling...'.red)
       }
       
