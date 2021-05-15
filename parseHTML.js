@@ -72,8 +72,13 @@ async function processLineByLine() {
         }
       }
 
-      if (line.includes('session-id')) 
+      if (line.includes('session-id=')) 
       {
+        // if (!isNaN(parseInt(sessionID.charAt(0))))
+        // {
+        //   continue
+        // }
+
         sessionID = grabSession(line)
       }
 
@@ -87,21 +92,6 @@ async function processLineByLine() {
           seller: ''
         }
       }
-
-      // if (product.offerListing)
-      // {
-      //   products.push(product)
-      // }
-  
-      // if (counter == 3)
-      // {
-      //     idS.sessionID = line
-      // }
-
-      // if (counter == 2)
-      // {
-      //     idS.offerListing = line
-      // }
 
       counter = counter + 1        
     }
@@ -139,15 +129,28 @@ async function processLineByLine() {
     return listing
   }
 
+  // function grabSession(sessionID) {
+  //   session = ''
+
+  //   startingIndex = sessionID.indexOf('value') + 7
+
+  //   for (i = startingIndex; sessionID.charAt(i) != '"'; i++) {
+  //     session += sessionID.charAt(i)
+  //   }
+    
+  //   return session
+  // }
+
   function grabSession(sessionID) {
+ 
     session = ''
 
-    startingIndex = sessionID.indexOf('value') + 7
+    startingIndex = sessionID.indexOf('session-id=') + 11
 
-    for (i = startingIndex; sessionID.charAt(i) != '"'; i++) {
+    for (i = startingIndex; sessionID.charAt(i) != '&'; i++) {
       session += sessionID.charAt(i)
     }
-    
+
     return session
   }
 
