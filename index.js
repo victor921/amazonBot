@@ -25,14 +25,16 @@ function timeStamp() {
 }
 
 
-async function checkCaptcha(page) {
+async function checkCaptcha(page, fileName) {
       
       capBrowser = null
       const captcha = await page.evaluate(() => document.querySelector('*').innerHTML);
       
-      fs.writeFileSync('captch.html', captcha);
+      fs.writeFileSync(`./html/${fileName}Captch.html`, captcha);
 
-      captchaLink = await parseCaptcha.processLineByLine()
+      captchaLink = await parseCaptcha.processLineByLine(asin)
+
+      // fs.unlinkSync(`./html/${fileName}Captch.html`)
 
       if (captchaLink !== '' && !captchaLink.includes('>'))
       {
@@ -72,6 +74,8 @@ async function checkCaptcha(page) {
 
   selection = 0
 
+  console.log('Make sure to clear your cart before running this!!'.yellow)
+
   while (selection < 1 || selection > products.Sheet1.length) 
   {
 
@@ -92,7 +96,6 @@ async function checkCaptcha(page) {
   let url = 'https://www.amazon.com/gp/product/' + asin + '/ref=olp_aod_redir_impl1?_encoding=UTF8&aod=1'
 
 
-
   try {
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
@@ -101,7 +104,7 @@ async function checkCaptcha(page) {
 
     url = ''
     
-    await checkCaptcha(page)
+    await checkCaptcha(page, asin)
     
     console.log(`[${timeStamp()}] ` + 'Started script..'.green)
 
@@ -116,7 +119,7 @@ async function checkCaptcha(page) {
       return
     }
 
-    await checkCaptcha(page)
+    await checkCaptcha(page, asin)
 
     let productTitle = await page.evaluate(() => ({
       name: document.querySelector('#a-page h1#title').innerText,
@@ -135,10 +138,12 @@ async function checkCaptcha(page) {
       // data = await page.content()
 
 
-      fs.writeFileSync('source.html', data);
+      fs.writeFileSync(`./html/${asin}.html`, data);
 
       
-      url = await parse.final()
+      url = await parse.final(asin)
+
+      // fs.unlinkSync(`./html/${fileName}.html`)
       
       if (url === '') {
         console.log(`[${timeStamp()}] ` + 'Monitoring product...'.cyan)
@@ -171,12 +176,12 @@ async function checkCaptcha(page) {
       //   await page.waitForNavigation({ waitUntil: 'networkidle0'})
       // }
 
-      await checkCaptcha(page)
+      await checkCaptcha(page, asin)
     }
     
     await page.goto(url)
 
-    await checkCaptcha(page)
+    await checkCaptcha(page, asin)
 
     // const captcha = await page.evaluate(() => document.querySelector('*').innerHTML);
 
@@ -288,6 +293,10 @@ async function checkCaptcha(page) {
 
       console.log(`[${timeStamp()}] ` + 'Attempting checkout...'.yellow)
 
+      fs.unlinkSync(`./html/${asin}.html`)
+      fs.unlinkSync(`./html/${asin}Captch.html`)
+
+
       await page.waitForNavigation();
       page.click('#submitOrderButtonId')
 
@@ -315,6 +324,8 @@ async function checkCaptcha(page) {
     } else {
       console.log(`[${timeStamp()}] ` + 'Error could not add to cart :('.red)
     }
+
+
 
     browser.close()
     return

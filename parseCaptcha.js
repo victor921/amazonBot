@@ -8,11 +8,11 @@ function timeStamp() {
 }
 
 
-async function processLineByLine() {
+
+
+async function processLineByLine(fileName) {
     
-
-
-    const fileStream = fs.createReadStream('captch.html');
+    const fileStream = fs.createReadStream(`./html/${fileName}Captch.html`);
   
     const rl = readline.createInterface({
       input: fileStream,
@@ -28,6 +28,7 @@ async function processLineByLine() {
             return getCaptcha(line)
         }
     }
+
 
     return ''
 }

@@ -7,10 +7,12 @@ function timeStamp() {
   return new Date().getHours() + ':' + new Date().getMinutes() + ':' + new Date().getSeconds() + ':' + new Date().getMilliseconds()
 }
 
+
+
 let atcURL = ''
 let sessionID = ''
 
-async function processLineByLine() {
+async function processLineByLine(fileName) {
     counter = 0
     prevCounter = -1
 
@@ -21,7 +23,7 @@ async function processLineByLine() {
         seller: ''
     }
     
-    const fileStream = fs.createReadStream('source.html');
+    const fileStream = fs.createReadStream(`./html/${fileName}.html`);
   
     const rl = readline.createInterface({
       input: fileStream,
@@ -107,6 +109,8 @@ async function processLineByLine() {
       counter = counter + 1        
     }
 
+    
+
     return products
   }
 
@@ -140,18 +144,6 @@ async function processLineByLine() {
     return listing
   }
 
-  // function grabSession(sessionID) {
-  //   session = ''
-
-  //   startingIndex = sessionID.indexOf('value') + 7
-
-  //   for (i = startingIndex; sessionID.charAt(i) != '"'; i++) {
-  //     session += sessionID.charAt(i)
-  //   }
-    
-  //   return session
-  // }
-
   function grabSession(sessionID) {
  
     session = ''
@@ -165,9 +157,9 @@ async function processLineByLine() {
     return session
   }
 
-    async function final() {
+    async function final(asin) {
 
-      res = await processLineByLine()
+      res = await processLineByLine(asin)
 
 
       if (res.length == 0)
