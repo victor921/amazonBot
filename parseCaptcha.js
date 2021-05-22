@@ -7,29 +7,25 @@ function timeStamp() {
   return new Date().getHours() + ':' + new Date().getMinutes() + ':' + new Date().getSeconds() + ':' + new Date().getMilliseconds()
 }
 
-
-
-
 async function processLineByLine(fileName) {
-    
     const fileStream = fs.createReadStream(`./html/${fileName}Captch.html`);
-  
+    
     const rl = readline.createInterface({
-      input: fileStream,
-      crlfDelay: Infinity
+        input: fileStream,
+        crlfDelay: Infinity
     });
     // Note: we use the crlfDelay option to recognize all instances of CR LF
     // ('\r\n') in input.txt as a single line break.
-  
+    
+    
     for await (const line of rl) {
-
+        
         if (line.includes('.jpg') && line.includes('captcha'))
         {
             return getCaptcha(line)
         }
     }
-
-
+    
     return ''
 }
 
@@ -46,5 +42,7 @@ function getCaptcha(line)
 
     return captcha
 }
+
+// console.log(processLineByLine('B08166SLDF'))
 
 module.exports = {processLineByLine}

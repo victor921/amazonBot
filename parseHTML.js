@@ -2,12 +2,11 @@ const fs = require('fs');
 const { resolve } = require('path');
 const readline = require('readline')
 var colors = require('colors')
+const path = require('path');
 
 function timeStamp() {
   return new Date().getHours() + ':' + new Date().getMinutes() + ':' + new Date().getSeconds() + ':' + new Date().getMilliseconds()
 }
-
-
 
 let atcURL = ''
 let sessionID = ''
@@ -195,6 +194,8 @@ async function processLineByLine(fileName) {
 
       // return atcURL
     }
+
+    // console.log(final('B08166SLDF'))
     module.exports = {final}
     
   
