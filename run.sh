@@ -8,6 +8,7 @@ then
 else
     echo "Installing dependencies.."
     npm i
+    npm i dotenv
 
 fi
 

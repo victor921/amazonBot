@@ -8,6 +8,7 @@ function timeStamp() {
   return new Date().getHours() + ':' + new Date().getMinutes() + ':' + new Date().getSeconds() + ':' + new Date().getMilliseconds()
 }
 
+
 let atcURL = ''
 let sessionID = ''
 
@@ -70,6 +71,7 @@ async function processLineByLine(fileName) {
       
       if ((prevCounter + 1 == counter) && (prevCounter != -1) || prevCounter == -2)
       {
+
         if (prevCounter == -2)
         {
           product.seller = 'Amazon.com'
@@ -195,7 +197,6 @@ async function processLineByLine(fileName) {
       // return atcURL
     }
 
-    // console.log(final('B08166SLDF'))
     module.exports = {final}
     
   

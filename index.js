@@ -7,7 +7,7 @@ const parse = require('./parseHTML')
 const parseCaptcha = require('./parseCaptcha')
 const excelToJson = require('convert-excel-to-json');
 const webhook = require('webhook-discord')
-const hook = new webhook.Webhook('')
+const hook = new webhook.Webhook('https://discord.com/api/webhooks/842926855594311760/xkVubd4MoMQIrXjcYerZKtrFuH1NQb7Il0tIvlR1OfRJuS-JFXT0AJ8Lsc236KYCrLQD')
 const signin = require('./signin')
 const path = require('path');
 
@@ -115,12 +115,17 @@ async function checkCaptcha(page, fileName) {
 
   let url = 'https://www.amazon.com/gp/product/' + asin + '/ref=olp_aod_redir_impl1?_encoding=UTF8&aod=1'
 
+  // let url = 'https://www.amazon.com/gp/aod/ajax/ref=aod_f_new?qty=1&asin=' + asin + '&pc=dp&tag=espresso004b-20'
+
+  // url = 'https://www.amazon.com/gp/product/' + 'B08166SLDF' + '/ref=olp_aod_redir_impl1?_encoding=UTF8&aod=1'
+
 
   try {
-    const browser = await puppeteer.launch({ headless: true, executablePath});
+    const browser = await puppeteer.launch({ headless: false, executablePath});
     const page = await browser.newPage();
     await page.setViewport({ width: 1080, height: 920 });
     await page.goto(url), { waitUntil: 'networkidle0' };
+    await page.setDefaultNavigationTimeout(0);
 
     url = ''
     
@@ -128,6 +133,7 @@ async function checkCaptcha(page, fileName) {
     
     
     console.log(`[${timeStamp()}] ` + 'Started script..'.green)
+  
 
     if (await signin.signin(browser) == true)
     {
@@ -142,11 +148,14 @@ async function checkCaptcha(page, fileName) {
 
     await checkCaptcha(page, asin)
 
+
+
     let productTitle = await page.evaluate(() => ({
       name: document.querySelector('#a-page h1#title').innerText,
     }));
 
     console.log(`[${timeStamp()}] ` + colors.yellow('Found product: ' + productTitle.name))
+    
 
     while (url === '') {
 
@@ -168,12 +177,30 @@ async function checkCaptcha(page, fileName) {
       
       if (url === '') {
         console.log(`[${timeStamp()}] ` + 'Monitoring product...'.cyan)
-        // await sleep(1000)
+        await sleep(1000)
         await page.reload({ waitUntil: 'networkidle0' })
       }
 
       else {
         console.log(`[${timeStamp()}] ` + 'PRODUCT IN STOCK'.green)
+
+        await page.goto(url)
+
+        let productCount = await page.evaluate(() => ({
+          count: document.querySelector('#a-page #nav-cart-count').innerText,
+        }));
+
+        if (productCount.count > 0)
+        {
+          break
+        }
+
+        else 
+        {
+          url = ''
+          console.log(`[${timeStamp()}] ` + 'Ghost cart found, retrying..'.cyan)
+          await page.goBack()
+        }
       }
 
 
@@ -200,9 +227,9 @@ async function checkCaptcha(page, fileName) {
       await checkCaptcha(page, asin)
     }
     
-    await page.goto(url)
+    // await page.goto(url)
 
-    await checkCaptcha(page, asin)
+    // await checkCaptcha(page, asin)
 
     // const captcha = await page.evaluate(() => document.querySelector('*').innerHTML);
 
@@ -221,16 +248,19 @@ async function checkCaptcha(page, fileName) {
 
     //   await page.waitForNavigation({ waitUntil: 'networkidle0'})
     // }
+
+    // let productCount = await page.evaluate(() => ({
+    //   count: document.querySelector('#a-page #nav-cart-count').innerText,
+    // }));
     
     let producPrice = await page.evaluate(() => ({
       price: document.querySelector('#a-page #sc-subtotal-amount-buybox').innerText,
-      count: document.querySelector('#a-page #nav-cart-count').innerText,
     }));
     
     console.log(`[${timeStamp()}] ` + colors.yellow('Price: ' + producPrice.price))
 
    
-    if (producPrice.count == 1) {
+    if (productCount.count == 1) {
       console.log(`[${timeStamp()}] ` + 'Product added To cart!'.green)
       console.log(`[${timeStamp()}] ` + 'Going to checkout...'.yellow)
   
