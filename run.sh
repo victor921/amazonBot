@@ -2,7 +2,7 @@
 
 echo "Checking for dependencies..."
 
-if [[ -d "$node_modules/" ]]
+if [[ -d "$/node_modules/" ]]
 then
     echo "Modules found, skipping this part.."
 else

@@ -93,6 +93,7 @@ async function checkCaptcha(page, fileName) {
   })
 
   selection = 0
+  let cartCount = 0
 
   console.log('Make sure to clear your cart before running this!!'.yellow)
 
@@ -121,7 +122,7 @@ async function checkCaptcha(page, fileName) {
 
 
   try {
-    const browser = await puppeteer.launch({ headless: false, executablePath});
+    const browser = await puppeteer.launch({ headless: true, executablePath});
     const page = await browser.newPage();
     await page.setViewport({ width: 1080, height: 920 });
     await page.goto(url), { waitUntil: 'networkidle0' };
@@ -192,6 +193,7 @@ async function checkCaptcha(page, fileName) {
 
         if (productCount.count > 0)
         {
+          cartCount = 1
           break
         }
 
@@ -260,7 +262,7 @@ async function checkCaptcha(page, fileName) {
     console.log(`[${timeStamp()}] ` + colors.yellow('Price: ' + producPrice.price))
 
    
-    if (productCount.count == 1) {
+    if (cartCount == 1) {
       console.log(`[${timeStamp()}] ` + 'Product added To cart!'.green)
       console.log(`[${timeStamp()}] ` + 'Going to checkout...'.yellow)
   
